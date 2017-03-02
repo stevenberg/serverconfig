@@ -1,0 +1,27 @@
+#!/usr/bin/ruby
+
+require 'date'
+require 'snitcher'
+
+Backup = Struct.new(:name, :date_string) do
+  def date
+    Date.parse(date_string)
+  end
+
+  def <=>(other)
+    name <=> other.name
+  end
+end
+
+`tarsnap --list-archives -v`.each_line.select { |line|
+  line =~ /^backup/
+}.map { |line|
+  Backup.new(*line.split[0..1])
+}.select { |backup|
+  backup.date <= Date.today.prev_month && backup.date.mday != 1
+}.sort.each do |backup|
+  system "tarsnap -d -f #{backup.name}"
+end
+
+result = system "tarsnap -c -f backup-#{Date.today.strftime('%Y-%m-%d')} --no-print-stats --quiet --exclude /var/lib/lxcfs /"
+Snitcher.snitch("{{ snitch_token }}") if result

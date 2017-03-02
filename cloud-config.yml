@@ -1,0 +1,15 @@
+#cloud-config
+package_upgrade: true
+packages:
+  - ntp
+  - python2.7
+users:
+  - name: steven
+    groups: sudo,adm
+    shell: /bin/bash
+    lock-passwd: false
+    ssh-authorized-keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM/M2P86+GEdFl8cDSSd30JGL/FLpQu9TcOmRYHXrhVW steven@Big-Boss.local
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEHDgenY+13ibke2eLaRid6LNoOVoki4+5fCPgM9DiQo steven@Solid-Snake.local
+runcmd:
+  - timedatectl set-timezene Etc/UTC

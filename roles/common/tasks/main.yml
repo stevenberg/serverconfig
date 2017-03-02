@@ -1,0 +1,159 @@
+---
+- name: configure firewall
+  ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto }}"
+    from: "{{ item.host }}"
+  with_items: "{{ common_firewall_rules + firewall_rules }}"
+
+- name: configure sshd
+  copy:
+    src: sshd_config
+    dest: /etc/ssh/sshd_config
+  notify:
+    - restart ssh
+
+- name: upload ssh ca key
+  copy:
+    content: "{{ ssh_ca_key }}"
+    dest: /etc/ssh/ca.key
+    mode: 0600
+  notify:
+    - restart ssh
+
+- name: upload ssh ca pubkey
+  copy:
+    content: "{{ ssh_ca_pubkey }}"
+    dest: /etc/ssh/ca.pub
+  notify:
+    - restart ssh
+
+- name: sign ssh host keys
+  command: ssh-keygen -s /etc/ssh/ca.key -h -n {{ ansible_fqdn }},{{ ssh_ipv4_address }},{{ ssh_ipv6_address }} -I {{ ansible_fqdn }}-key /etc/ssh/ssh_host_ed25519_key.pub
+  args:
+    creates: /etc/ssh/ssh_host_ed25519_key-cert.pub
+  with_items:
+    - key: ssh_host_ed25519_key.pub
+      cert: ssh_host_ed25519_key-cert.pub
+    - key: ssh_host_rsa_key.pub
+      cert: ssh_host_rsa_key-cert.pub
+  notify:
+    - restart ssh
+
+- name: delete unused ssh host keys
+  file:
+    path: /etc/ssh/{{ item }}
+    state: absent
+  with_items:
+    - ssh_host_dsa_key
+    - ssh_host_dsa_key.pub
+    - ssh_host_ecdsa_key
+    - ssh_host_ecdsa_key.pub
+
+- name: configure hosts
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+
+- name: configure unattended upgrades
+  lineinfile:
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    regexp: Unattended-Upgrade::Mail
+    line: Unattended-Upgrade::Mail "root";
+
+- name: install apt keys from url
+  apt_key:
+    url: "{{ item }}"
+  with_items: "{{ common_apt_key_urls + apt_key_urls }}"
+
+- name: install apt keys from keyservers
+  apt_key:
+    keyserver: "{{ item.server }}"
+    id: "{{ item.id }}"
+  with_items: "{{ apt_keyservers }}"
+
+- name: install apt repositories
+  apt_repository:
+    repo: "{{ item }}"
+    update_cache: no
+  with_items: "{{ common_apt_repositories + apt_repositories }}"
+
+- name: upgrade packages
+  apt:
+    update_cache: yes
+    upgrade: dist
+
+- name: install common packages
+  apt:
+    name: "{{ item }}"
+    state: latest
+    update_cache: no
+  with_items: "{{ common_apt_packages + apt_packages }}"
+
+- name: set ruby2.4 as default ruby
+  alternatives:
+    name: "{{ item }}"
+    path: /usr/bin/{{ item }}2.4
+  with_items:
+    - gem
+    - ruby
+
+- name: download ripgrep archive
+  get_url:
+    url: https://github.com/BurntSushi/ripgrep/releases/download/0.4.0/ripgrep-0.4.0-x86_64-unknown-linux-musl.tar.gz
+    dest: /tmp/ripgrep-0.4.0-x86_64-unknown-linux-musl.tar.gz
+
+- name: unarchive ripgrep archive
+  unarchive:
+    src: /tmp/ripgrep-0.4.0-x86_64-unknown-linux-musl.tar.gz
+    dest: /tmp
+    remote_src: yes
+
+- name: install ripgrep
+  copy:
+    src: /tmp/ripgrep-0.4.0-x86_64-unknown-linux-musl/rg
+    dest: /usr/local/bin/rg
+    remote_src: yes
+
+- name: create tarsnap key
+  shell: echo '{{ tarsnap_password }}' | tarsnap-keygen --keyfile /root/tarsnap.key --user steven@stevenberg.net --machine {{ ansible_fqdn }}
+  args:
+    creates: /root/tarsnap.key
+
+- name: install tarsnap config file
+  copy:
+    src: tarsnap.conf
+    dest: /usr/local/etc/tarsnap.conf
+
+- name: install tarsnap backup cron script
+  template:
+    src: tarsnap-backup.j2
+    dest: /etc/cron.daily/tarsnap-backup
+    mode: 0755
+
+- name: install gems
+  gem:
+    name: "{{ item }}"
+    state: latest
+    user_install: no
+  with_items:
+    - snitcher
+    - rake
+
+- name: download spiped archive
+  get_url:
+    url: http://www.tarsnap.com/spiped/spiped-1.5.0.tgz
+    dest: /tmp/spiped-1.5.0.tar.gz
+
+- name: unarchive spiped archive
+  unarchive:
+    src: /tmp/spiped-1.5.0.tar.gz
+    dest: /tmp
+    remote_src: yes
+
+- name: install spiped
+  command: make BINDIR=/usr/local/bin install
+  args:
+    chdir: /tmp/spiped-1.5.0
+    creates: /usr/local/bin/spiped

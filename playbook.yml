@@ -1,0 +1,6 @@
+---
+- hosts: stevenberg.net
+  become: yes
+  roles:
+    - common
+    - major.mailgun
