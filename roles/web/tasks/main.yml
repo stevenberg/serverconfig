@@ -5,6 +5,23 @@
     home: /srv/www
     shell: /usr/lib/sftp-server
 
+- name: clone dotfiles repo for www
+  git: repo=https://github.com/stevenberg/dotfiles.git dest=/srv/www/.dotfiles
+  become_user: www
+
+- name: create directories for www
+  file:
+    path: /srv/www/{{ item }}
+    state: directory
+    owner: www
+  with_items:
+    - bin
+    - .cache/vim
+
+- name: install dotfiles for www
+  command: rcup -t linux -f -d /srv/www/.dotfiles -x Brewfile -x LICENSE -x linux-setup.sh -x mac-setup.sh
+  become_user: www
+
 - name: increase open-files soft limit for www user
   lineinfile:
     dest: /etc/security/limits.conf

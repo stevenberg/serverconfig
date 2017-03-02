@@ -1,4 +1,26 @@
 ---
+- name: configure sudo
+  copy:
+    src: always_set_home
+    dest: /etc/sudoers.d/always_set_home
+
+- name: clone dotfiles repo for steven
+  git: repo=https://github.com/stevenberg/dotfiles.git dest=/home/steven/.dotfiles
+  become_user: steven
+
+- name: create directories for steven
+  file:
+    path: /home/steven/{{ item }}
+    state: directory
+    owner: steven
+  with_items:
+    - bin
+    - .cache/vim
+
+- name: install dotfiles for steven
+  command: rcup -t linux -f -d /home/steven/.dotfiles -x Brewfile -x LICENSE -x linux-setup.sh -x mac-setup.sh
+  become_user: steven
+
 - name: configure sshd
   copy:
     src: sshd_config
@@ -83,13 +105,17 @@
     update_cache: no
   with_items: "{{ common_apt_packages + apt_packages }}"
 
-- name: set ruby2.4 as default ruby
+- name: set default commands
   alternatives:
-    name: "{{ item }}"
-    path: /usr/bin/{{ item }}2.4
+    name: "{{ item.command }}"
+    path: /usr/bin/{{ item.alternative }}
   with_items:
-    - gem
-    - ruby
+    - command: gem
+      alternative: gem2.4
+    - command: ruby
+      alternative: ruby2.4
+    - command: editor
+      alternative: vim.nox
 
 - name: create pkg directory
   file:
