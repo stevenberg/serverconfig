@@ -91,20 +91,25 @@
     - gem
     - ruby
 
+- name: create pkg directory
+  file:
+    path: /root/pkg
+    state: directory
+
 - name: download ripgrep archive
   get_url:
     url: https://github.com/BurntSushi/ripgrep/releases/download/0.4.0/ripgrep-0.4.0-x86_64-unknown-linux-musl.tar.gz
-    dest: /tmp/ripgrep-0.4.0-x86_64-unknown-linux-musl.tar.gz
+    dest: /root/pkg/ripgrep-0.4.0-x86_64-unknown-linux-musl.tar.gz
 
 - name: unarchive ripgrep archive
   unarchive:
-    src: /tmp/ripgrep-0.4.0-x86_64-unknown-linux-musl.tar.gz
-    dest: /tmp
+    src: /root/pkg/ripgrep-0.4.0-x86_64-unknown-linux-musl.tar.gz
+    dest: /root/pkg
     remote_src: yes
 
 - name: install ripgrep
   copy:
-    src: /tmp/ripgrep-0.4.0-x86_64-unknown-linux-musl/rg
+    src: /root/pkg/ripgrep-0.4.0-x86_64-unknown-linux-musl/rg
     dest: /usr/local/bin/rg
     remote_src: yes
 
@@ -141,18 +146,18 @@
 - name: download spiped archive
   get_url:
     url: http://www.tarsnap.com/spiped/spiped-1.5.0.tgz
-    dest: /tmp/spiped-1.5.0.tar.gz
+    dest: /root/pkg/spiped-1.5.0.tar.gz
 
 - name: unarchive spiped archive
   unarchive:
-    src: /tmp/spiped-1.5.0.tar.gz
-    dest: /tmp
+    src: /root/pkg/spiped-1.5.0.tar.gz
+    dest: /root/pkg
     remote_src: yes
 
 - name: install spiped
   command: make BINDIR=/usr/local/bin MAN1DIR=/usr/local/man/man1 install
   args:
-    chdir: /tmp/spiped-1.5.0
+    chdir: /root/pkg/spiped-1.5.0
     creates: /usr/local/bin/spiped
 
 - name: create /etc/spiped
