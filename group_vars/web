@@ -1,0 +1,7 @@
+firewall_rules:
+  - host: any
+    port: http
+    proto: tcp
+  - host: any
+    port: https
+    proto: tcp

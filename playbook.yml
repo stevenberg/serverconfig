@@ -4,3 +4,8 @@
   roles:
     - common
     - major.mailgun
+
+- hosts: web
+  become: yes
+  roles:
+    - web

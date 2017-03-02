@@ -1,0 +1,94 @@
+---
+- name: create www user
+  user:
+    name: www
+    home: /srv/www
+    shell: /usr/lib/sftp-server
+
+- name: increase open-files soft limit for www user
+  lineinfile:
+    dest: /etc/security/limits.conf
+    line: "www             soft    nofile          4096"
+
+- name: increase open-files hard limit for www user
+  lineinfile:
+    dest: /etc/security/limits.conf
+    line: "www             hard    nofile          4096"
+
+- name: download caddy
+  get_url:
+    url: https://caddyserver.com/download/build?os=linux&arch=amd64&features=expires%2Cgit%2Cminify%2Cratelimit%2Crealip%2Cdnsimple
+    dest: /root/pkg/caddy.tar.gz
+
+- name: unarchive caddy
+  unarchive:
+    src: /root/pkg/caddy.tar.gz
+    dest: /root/pkg
+    remote_src: yes
+
+- name: install caddy
+  copy:
+    src: /root/pkg/caddy
+    dest: /usr/local/bin/caddy
+    remote_src: yes
+    mode: 0755
+
+- name: give caddy net_bind_service capability
+  capabilities:
+    path: /usr/local/bin/caddy
+    capability: cap_net_bind_service+ep
+
+- name: create caddy config directory
+  file:
+    path: /etc/caddy/vhosts
+    state: directory
+
+- name: install caddy config file
+  copy:
+    src: Caddyfile
+    dest: /etc/caddy/Caddyfile
+  notify:
+    - restart caddy
+
+- name: copy caddy vhost defaults file
+  copy:
+    src: defaults.conf
+    dest: /etc/caddy/defaults.conf
+  notify:
+    - restart caddy
+
+- name: create caddy ssl directory
+  file:
+    path: /etc/ssl/caddy
+    state: directory
+    owner: www
+    group: root
+    mode: 0775
+
+- name: create default vhost directory
+  file:
+    path: /srv/www/{{ ansible_fqdn }}/public
+    state: directory
+
+- name: install default vhost index.html
+  template:
+    src: index.html.j2
+    dest: /srv/www/{{ ansible_fqdn }}/public/index.html
+
+- name: install default vhost config
+  template:
+    src: defaultvhost.conf.j2
+    dest: /etc/caddy/vhosts/{{ ansible_fqdn }}.conf
+  notify:
+    - restart caddy
+
+- name: install caddy service
+  template:
+    src: caddy.service.j2
+    dest: /etc/systemd/system/caddy.service
+
+- name: enable caddy service
+  service:
+    name: caddy
+    enabled: yes
+
