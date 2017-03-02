@@ -1,0 +1,25 @@
+---
+apt_keyservers:
+  - server: hkp://keyserver.ubuntu.com:80
+    id: '0xF1656F24C74CD1D8'
+apt_key_urls:
+  - https://www.postgresql.org/media/keys/ACCC4CF8.asc
+apt_repositories:
+  - deb [arch=amd64,i386] http://nyc2.mirrors.digitalocean.com/mariadb/repo/10.1/ubuntu xenial main
+  - deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main
+  - ppa:ondrej/php
+apt_packages:
+  - mariadb-client
+  - memcached
+  - php-geoip
+  - php7.1
+  - php7.1-curl
+  - php7.1-fpm
+  - php7.1-gd
+  - php7.1-mbstring
+  - php7.1-mysql
+  - php7.1-opcache
+  - php7.1-xml
+  - php7.1-zip
+  - postgresql-client
+  - redis-server

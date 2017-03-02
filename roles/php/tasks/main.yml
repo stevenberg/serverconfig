@@ -1,0 +1,37 @@
+---
+- name: configure php-fpm pool
+  lineinfile:
+    dest: /etc/php/7.1/fpm/pool.d/www.conf
+    line: "{{ item.line }}"
+    regexp: "{{ item.regexp }}"
+  with_items:
+    - regexp: "^user"
+      line: "user = www"
+    - regexp: "^group"
+      line: "group = www"
+    - regexp: "^listen = "
+      line: "listen = 127.0.0.1:9000"
+  notify:
+    - restart php
+
+- name: configure php
+  lineinfile:
+    dest: /etc/php/7.1/{{ item }}/php.ini
+    regexp: "date.timezone ="
+    line: "date.timezone = Etc/UTC"
+  with_items:
+    - cli
+    - fpm
+  notify:
+    - restart php
+
+- name: copy composer install script
+  copy:
+    src: install-composer.sh
+    dest: /root/pkg/install-composer.sh
+    mode: 0755
+
+- name: install composer
+  command: /root/pkg/install-composer.sh
+  args:
+    creates: /usr/local/bin/composer
