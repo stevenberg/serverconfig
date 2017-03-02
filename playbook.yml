@@ -9,3 +9,8 @@
   become: yes
   roles:
     - web
+
+- hosts: ruby
+  become: yes
+  roles:
+    - ruby

@@ -1,0 +1,27 @@
+---
+- name: clone rbenv repo
+  git: repo=https://github.com/rbenv/rbenv.git dest=/srv/www/.rbenv
+  become_user: www
+
+- name: clone ruby-build repo
+  git: repo=https://github.com/rbenv/ruby-build.git dest=/srv/www/.rbenv/plugins/ruby-build
+
+- name: compile dynamic bash extension for rbenv
+  shell: ./configure && make
+  args:
+    chdir: /srv/www/.rbenv/src
+    creates: /srv/www/.rbenv/libexec/rbenv-realpath.dylib
+  become_user: www
+
+- name: copy rbenv.bash
+  copy:
+    src: rbenv.bash
+    dest: /srv/www/.config/bash/rbenv.bash
+    owner: www
+
+- name: install bundler
+  gem:
+    name: bundler
+    state: latest
+    user_install: no
+
