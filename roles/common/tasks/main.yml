@@ -4,30 +4,6 @@
     src: always_set_home
     dest: /etc/sudoers.d/always_set_home
 
-- name: clone dotfiles repo for steven
-  git: repo=https://github.com/stevenberg/dotfiles.git dest=/home/steven/.dotfiles
-  become_user: steven
-
-- name: create directories for steven
-  file:
-    path: /home/steven/{{ item }}
-    state: directory
-    owner: steven
-  with_items:
-    - bin
-    - .cache/vim
-
-- name: install dotfiles for steven
-  command: rcup -t linux -f -d /home/steven/.dotfiles -x Brewfile -x LICENSE -x linux-setup.sh -x mac-setup.sh
-  become_user: steven
-
-- name: configure sshd
-  copy:
-    src: sshd_config
-    dest: /etc/ssh/sshd_config
-  notify:
-    - restart ssh
-
 - name: upload ssh ca key
   copy:
     content: "{{ ssh_ca_key }}"
@@ -231,3 +207,27 @@
     proto: "{{ item.proto }}"
     from: "{{ item.host }}"
   with_items: "{{ common_firewall_rules + firewall_rules }}"
+
+- name: clone dotfiles repo for steven
+  git: repo=https://github.com/stevenberg/dotfiles.git dest=/home/steven/.dotfiles
+  become_user: steven
+
+- name: create directories for steven
+  file:
+    path: /home/steven/{{ item }}
+    state: directory
+    owner: steven
+  with_items:
+    - bin
+    - .cache/vim
+
+- name: install dotfiles for steven
+  command: rcup -t linux -f -d /home/steven/.dotfiles -x Brewfile -x LICENSE -x linux-setup.sh -x mac-setup.sh
+  become_user: steven
+
+- name: configure sshd
+  copy:
+    src: sshd_config
+    dest: /etc/ssh/sshd_config
+  notify:
+    - restart ssh
