@@ -1,0 +1,10 @@
+[Unit]
+Description=spiped service for SSH
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/spiped -F -d -s [0.0.0.0]:8022 -t [127.0.0.1]:22 -k /etc/spiped/ssh.key
+
+[Install]
+WantedBy=multi-user.target

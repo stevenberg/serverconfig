@@ -1,12 +1,4 @@
 ---
-- name: configure firewall
-  ufw:
-    rule: allow
-    port: "{{ item.port }}"
-    proto: "{{ item.proto }}"
-    from: "{{ item.host }}"
-  with_items: "{{ common_firewall_rules + firewall_rules }}"
-
 - name: configure sshd
   copy:
     src: sshd_config
@@ -30,9 +22,9 @@
     - restart ssh
 
 - name: sign ssh host keys
-  command: ssh-keygen -s /etc/ssh/ca.key -h -n {{ ansible_fqdn }},{{ ssh_ipv4_address }},{{ ssh_ipv6_address }} -I {{ ansible_fqdn }}-key /etc/ssh/ssh_host_ed25519_key.pub
+  command: ssh-keygen -s /etc/ssh/ca.key -h -n {{ ansible_fqdn }},{{ ssh_ipv4_address }},{{ ssh_ipv6_address }} -I {{ ansible_fqdn }}-key /etc/ssh/{{ item.key }}
   args:
-    creates: /etc/ssh/ssh_host_ed25519_key-cert.pub
+    creates: /etc/ssh/{{ item.cert }}
   with_items:
     - key: ssh_host_ed25519_key.pub
       cert: ssh_host_ed25519_key-cert.pub
@@ -141,6 +133,11 @@
     - snitcher
     - rake
 
+- name: create man1 directory
+  file:
+    path: /usr/local/man/man1
+    state: directory
+
 - name: download spiped archive
   get_url:
     url: http://www.tarsnap.com/spiped/spiped-1.5.0.tgz
@@ -153,7 +150,52 @@
     remote_src: yes
 
 - name: install spiped
-  command: make BINDIR=/usr/local/bin install
+  command: make BINDIR=/usr/local/bin MAN1DIR=/usr/local/man/man1 install
   args:
     chdir: /tmp/spiped-1.5.0
     creates: /usr/local/bin/spiped
+
+- name: create /etc/spiped
+  file:
+    path: /etc/spiped
+    state: directory
+
+- name: create spiped-ssh key
+  command: dd if=/dev/urandom of=/etc/spiped/ssh.key bs=32 count=1
+  args:
+    creates: /etc/spiped/ssh.key
+  notify:
+    - restart spiped-ssh
+
+- name: restrict access to spiped-ssh key
+  file:
+    path: /etc/spiped/ssh.key
+    mode: 0600
+
+- name: install spiped-ssh service
+  copy:
+    src: spiped-ssh.service
+    dest: /etc/systemd/system/spiped-ssh.service
+  notify:
+    - reload services
+    - restart spiped-ssh
+
+- name: enable spiped-ssh service
+  service:
+    name: spiped-ssh
+    enabled: yes
+
+- name: fetch spiped-ssh key
+  fetch:
+    src: /etc/spiped/ssh.key
+    dest: ~/.ssh/spiped_{{ ansible_fqdn }}_key
+    flat: yes
+    fail_on_missing: yes
+
+- name: configure firewall
+  ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto }}"
+    from: "{{ item.host }}"
+  with_items: "{{ common_firewall_rules + firewall_rules }}"

@@ -1,3 +1,7 @@
 ---
 - name: restart ssh
   service: name=ssh state=restarted
+- name: reload services
+  command: systemctl daemon-reload
+- name: restart spiped-ssh
+  service: name=spiped-ssh state=restarted
