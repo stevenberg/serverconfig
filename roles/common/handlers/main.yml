@@ -3,5 +3,6 @@
   service: name=ssh state=restarted
 - name: reload services
   command: systemctl daemon-reload
-- name: restart spiped-ssh
-  service: name=spiped-ssh state=restarted
+- name: restart spiped services
+  service: name=spiped-{{ item.name }} state=restarted
+  with_items: "{{ common_spiped_services + spiped_services }}"

@@ -1,0 +1,10 @@
+[Unit]
+Description=spiped service for {{ item.name }}
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/spiped -F -d -s [0.0.0.0]:{{ item.srcport }} -t [127.0.0.1]:{{ item.destport }} -k /etc/spiped/{{ item.name }}.key
+
+[Install]
+WantedBy=multi-user.target

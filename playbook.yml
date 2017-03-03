@@ -19,3 +19,8 @@
   become: yes
   roles:
     - php
+
+- hosts: mariadb
+  become: yes
+  roles:
+    - mariadb

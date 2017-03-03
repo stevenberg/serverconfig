@@ -1,0 +1,17 @@
+---
+firewall_rules:
+  - host: any
+    port: 8306
+    proto: tcp
+apt_keyservers:
+  - server: hkp://keyserver.ubuntu.com:80
+    id: '0xF1656F24C74CD1D8'
+apt_repositories:
+  - deb [arch=amd64,i386] http://nyc2.mirrors.digitalocean.com/mariadb/repo/10.1/ubuntu xenial main
+apt_packages:
+  - mariadb-server
+  - python-mysqldb
+spiped_services:
+  - name: mariadb
+    srcport: 8306
+    destport: 3306

@@ -1,0 +1,46 @@
+#!/usr/bin/ruby
+
+require 'date'
+require 'fileutils'
+require 'open3'
+require 'pathname'
+require 'snitcher'
+
+include FileUtils
+
+BACKUP_DIRECTORY = Pathname('/home/steven/dbbackups')
+
+unless BACKUP_DIRECTORY.exist?
+  mkdir(BACKUP_DIRECTORY)
+  chown('steven', 'steven', BACKUP_DIRECTORY)
+end
+
+today = Date.today
+
+Dir.entries(BACKUP_DIRECTORY).each do |entry|
+  next if entry[0] == '.'
+
+  created_on = Date.parse(entry)
+  next if created_on > today.prev_month || created_on.mday == 1
+
+  remove_entry(BACKUP_DIRECTORY.join((entry)))
+end
+
+new_directory = BACKUP_DIRECTORY.join(today.to_s)
+mkpath(new_directory)
+
+`mysql --skip-column-names -e 'show databases'`.each_line do |db|
+  db.chomp!
+
+  next if %w(information_schema performance_schema sys).include?(db)
+
+  output, status = Open3.capture2("mysqldump #{db}")
+  fail "Dump of #{db} failed" unless status.success?
+
+  result = File.write(new_directory.join("#{db}.db.bak"), output)
+  fail "Write of #{db}.db.bak failed" unless result == output.bytesize
+end
+
+chown_R('steven', 'steven', new_directory)
+
+Snitcher.snitch('{{ mysql_snitch_token }}')

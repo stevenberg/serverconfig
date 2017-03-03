@@ -1,0 +1,25 @@
+---
+- name: use UTF-8 by default
+  lineinfile:
+    dest: /etc/mysql/conf.d/mariadb.cnf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - regexp: default-character-set
+      line: default-character-set = utf8
+    - regexp: character-set-server
+      line: character-set-server = utf8
+    - regexp: collation-server
+      line: collation-server = utf8_general_ci
+    - regexp: character_set_server
+      line: character_set_server = utf8
+    - regexp: collation_server
+      line: collation_server = utf8_general_ci
+  notify:
+    - restart mariadb
+
+- name: install backup cron job
+  template:
+    src: mariadb-backup.j2
+    dest: /etc/cron.daily/mariadb-backup
+    mode: 0755
