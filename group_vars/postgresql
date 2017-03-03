@@ -1,0 +1,17 @@
+---
+firewall_rules:
+  - host: any
+    port: 8432
+    proto: tcp
+apt_key_urls:
+  - https://www.postgresql.org/media/keys/ACCC4CF8.asc
+apt_repositories:
+  - deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main
+apt_packages:
+  - libpq-dev
+  - postgresql
+  - python-psycopg2
+spiped_services:
+  - name: postgresql
+    srcport: 8432
+    destport: 5432

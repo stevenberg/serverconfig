@@ -1,0 +1,23 @@
+---
+- name: install spiped-postgresql-client service
+  template:
+    src: spiped-postgresql-client.service.j2
+    dest: /etc/systemd/system/spiped-postgresql-client.service
+  notify:
+    - reload services
+    - restart spiped-postgresql-client
+
+- name: install postgresql spiped key
+  copy:
+    src: spiped-keys/{{ postgresql_server_key }}
+    dest: /etc/spiped/{{ postgresql_server_key }}
+    mode: 0600
+  notify:
+    - restart spiped-postgresql-client
+
+- name: enable spiped-postgresql-client service
+  service:
+    name: spiped-postgresql-client
+    state: started
+    enabled: yes
+

@@ -29,3 +29,13 @@
   become: yes
   roles:
     - mariadb-client
+
+- hosts: postgresql
+  become: yes
+  roles:
+    - postgresql
+
+- hosts: postgresql-client
+  become: yes
+  roles:
+    - postgresql-client

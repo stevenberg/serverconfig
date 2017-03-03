@@ -29,16 +29,17 @@ end
 new_directory = BACKUP_DIRECTORY.join(today.to_s)
 mkpath(new_directory)
 
-`mysql --skip-column-names -e 'show databases'`.each_line do |db|
-  db.chomp!
+`sudo -u postgres psql -t -c 'select datname from pg_database'`.each_line do |db|
+  db.strip!
 
-  next if %w(information_schema performance_schema sys).include?(db)
+  next if db.empty?
+  next if %w(template0 template1).include?(db)
 
-  output, status = Open3.capture2("mysqldump #{db}")
-  fail "Dump of #{db} failed" unless status.success?
+  output, status = Open3.capture2("sudo -u postgres pg_dump #{db}")
+  raise "Dump of #{db} failed" unless status.success?
 
   result = File.write(new_directory.join("#{db}.db.bak"), output)
-  fail "Write of #{db}.db.bak failed" unless result == output.bytesize
+  raise "Write of #{db}.db.bak failed" unless result == output.bytesize
 end
 
 chown_R('steven', 'steven', new_directory)

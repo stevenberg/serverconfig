@@ -1,0 +1,10 @@
+[Unit]
+Description=spiped service for postgresql
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/spiped -F -e -s [127.0.0.1]:5432 -t [{{ postgresql_server_address }}]:8432 -k /etc/spiped/{{ postgresql_server_key }}
+
+[Install]
+WantedBy=multi-user.target

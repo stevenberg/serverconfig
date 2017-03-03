@@ -1,0 +1,6 @@
+---
+- name: install backup cron job
+  template:
+    src: postgresql-backup.j2
+    dest: /etc/cron.daily/postgresql-backup
+    mode: 0755

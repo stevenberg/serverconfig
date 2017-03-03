@@ -1,0 +1,5 @@
+---
+- name: reload services
+  command: systemctl daemon-reload
+- name: restart spiped-postgresql-client
+  service: name=spiped-postgresql-client state=restarted
