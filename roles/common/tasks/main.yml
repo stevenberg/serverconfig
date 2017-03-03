@@ -226,6 +226,7 @@
   with_items:
     - bin
     - .cache/vim
+    - .local/bash
 
 - name: install dotfiles for steven
   command: rcup -t linux -f -d /home/steven/.dotfiles -x Brewfile -x LICENSE -x linux-setup.sh -x mac-setup.sh
