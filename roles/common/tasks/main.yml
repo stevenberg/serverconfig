@@ -124,7 +124,7 @@
 - name: install tarsnap config file
   copy:
     src: tarsnap.conf
-    dest: /usr/local/etc/tarsnap.conf
+    dest: /etc/tarsnap.conf
 
 - name: install tarsnap backup cron script
   template:
