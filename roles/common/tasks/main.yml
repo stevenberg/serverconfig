@@ -199,8 +199,9 @@
 
 - name: fetch spiped keys
   fetch:
-    src: /etc/spiped/ssh.key
-    dest: spiped-keys/spiped_{{ item.name }}_{{ ansible_fqdn }}.key
+    src: /etc/spiped/{{ item.name }}.key
+    dest: spiped-keys/{{ item.name }}_{{ ansible_fqdn }}.key
+    mode: 0600
     flat: yes
     fail_on_missing: yes
   with_items: "{{ common_spiped_services + spiped_services }}"

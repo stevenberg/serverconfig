@@ -1,0 +1,5 @@
+---
+- name: reload services
+  command: systemctl daemon-reload
+- name: restart spiped-mariadb-client
+  service: name=spiped-mariadb-client state=restarted

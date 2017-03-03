@@ -1,0 +1,23 @@
+---
+- name: install spiped-mariadb-client service
+  template:
+    src: spiped-mariadb-client.service.j2
+    dest: /etc/systemd/system/spiped-mariadb-client.service
+  notify:
+    - reload services
+    - restart spiped-mariadb-client
+
+- name: install mariadb spiped key
+  copy:
+    src: spiped-keys/{{ mariadb_server_key }}
+    dest: /etc/spiped/{{ mariadb_server_key }}
+    mode: 0600
+  notify:
+    - restart spiped-mariadb-client
+
+- name: enable spiped-mariadb-client service
+  service:
+    name: spiped-mariadb-client
+    state: started
+    enabled: yes
+

@@ -1,0 +1,10 @@
+[Unit]
+Description=spiped service for mariadb
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/spiped -F -e -s [127.0.0.1]:3306 -t [{{ mariadb_server_address }}]:8306 -k /etc/spiped/{{ mariadb_server_key }}
+
+[Install]
+WantedBy=multi-user.target

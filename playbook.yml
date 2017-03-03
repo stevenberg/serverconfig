@@ -24,3 +24,8 @@
   become: yes
   roles:
     - mariadb
+
+- hosts: mariadb-client
+  become: yes
+  roles:
+    - mariadb-client
