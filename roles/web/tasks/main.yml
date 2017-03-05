@@ -86,11 +86,25 @@
   file:
     path: /srv/www/{{ ansible_fqdn }}/public
     state: directory
+    owner: www
+    group: www
 
 - name: install default vhost index.html
   template:
     src: index.html.j2
     dest: /srv/www/{{ ansible_fqdn }}/public/index.html
+    owner: www
+    group: www
+
+- name: install default vhost files
+  copy:
+    src: "{{ item }}"
+    dest: /srv/www/{{ ansible_fqdn }}/public/{{ item }}
+    owner: www
+    group: www
+  with_items:
+    - favicon.png
+    - style.css
 
 - name: install default vhost config
   template:

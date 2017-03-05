@@ -1,0 +1,13 @@
+body {
+  align-items: center;
+  background-color: tomato;
+  color: gold;
+  display: flex;
+  font-family: sans-serif;
+  min-height: 100vh;
+  text-align: center;
+}
+
+h1 {
+  width: 100vw;
+}
