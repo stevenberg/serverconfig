@@ -5,6 +5,27 @@
     home: /srv/www
     shell: /usr/lib/sftp-server
 
+- name: create /srv/www/.ssh directory
+  file:
+    path: /srv/www/.ssh
+    state: directory
+    owner: www
+    group: www
+
+- name: create ssh deploy key for www
+  command: ssh-keygen -t ed25519 -o -a 100 -N '' -f /srv/www/.ssh/id_ed25519
+  args:
+    creates: /srv/www/.ssh/id_ed25519
+
+- name: set ownership of www's ssh deploy key
+  file:
+    path: /srv/www/.ssh/{{ item }}
+    owner: www
+    group: www
+  with_items:
+    - id_ed25519
+    - id_ed25519.pub
+
 - name: clone dotfiles repo for www
   git: repo=https://github.com/stevenberg/dotfiles.git dest=/srv/www/.dotfiles
   become_user: www
@@ -17,6 +38,7 @@
   with_items:
     - bin
     - .cache/vim
+    - .local/bash
 
 - name: install dotfiles for www
   command: rcup -t linux -f -d /srv/www/.dotfiles -x Brewfile -x LICENSE -x linux-setup.sh -x mac-setup.sh
